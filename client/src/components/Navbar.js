@@ -33,7 +33,7 @@ const Navbar = () => {
 
         {/* Desktop Menu */}
         <ul className={`nav-links ${menuOpen ? "open" : ""}`}>
-          {["Home", "About", "Services", "Work-Experience", "Contact", "Team-Member"].map((item) => (
+          {["Home", "About", "Services", "Work-Experience", "Contact", "Team-Member","blog"].map((item) => (
             <li key={item}>
               <Link to={`/${item.toLowerCase()}`} className="nav-item" onClick={() => setMenuOpen(false)}>
                 {item}
@@ -57,7 +57,7 @@ const Navbar = () => {
       {menuOpen && (
         <div className="mobile-menu">
           <ul className="mobile-nav">
-            {["Home", "About", "Services", "Work-Experience", "Contact", "Team-Member"].map((item) => (
+            {["Home", "About", "Services", "Work-Experience", "Contact", "Team-Member","blog"].map((item) => (
               <li key={item}>
                 <Link to={`/${item.toLowerCase()}`} className="nav-item" onClick={() => setMenuOpen(false)}>
                   {item}

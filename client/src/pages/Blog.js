@@ -30,7 +30,7 @@ const Blog = () => {
     const fetchPosts = async () => {
       setLoading(true);
       try {
-        const response = await axios.get('/api/blogs');
+        const response = await axios.get('https://alqadridev.onrender.com/api/blogs');
         // Filter only published posts for public view and ensure they have categories
         const publishedPosts = response.data
           .filter(post => post.status === 'published')

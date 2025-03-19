@@ -31,7 +31,7 @@ const Login = () => {
     setLoading(true);
     setError('');
     try {
-      await axios.post('/api/auth/request-otp', { email });
+      await axios.post('https://alqadridev.onrender.com/api/auth/request-otp', { email });
       setShowOtpInput(true);
       setSuccess('OTP sent successfully!');
     } catch (error) {
@@ -46,7 +46,7 @@ const Login = () => {
     setLoading(true);
     setError('');
     try {
-      const response = await axios.post('/api/auth/verify-otp', {
+      const response = await axios.post('https://alqadridev.onrender.com/api/auth/verify-otp', {
         email,
         otp,
       });

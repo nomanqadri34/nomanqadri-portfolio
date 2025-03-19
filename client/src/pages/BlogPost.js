@@ -1,29 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
-import { FaCalendar, FaClock, FaTag, FaTwitter, FaFacebookF, FaLinkedinIn, FaLink, FaShare } from 'react-icons/fa';
+import { FaCalendar, FaClock, FaTag, FaTwitter, FaFacebookF, FaLinkedinIn, FaLink, FaShare, FaArrowLeft } from 'react-icons/fa';
 import { toast } from 'react-toastify';
-import ReactQuill from 'react-quill';
-import 'react-quill/dist/quill.snow.css';
 import 'react-toastify/dist/ReactToastify.css';
-import './BlogPost.css';
 import axios from 'axios';
-
-// Quill editor modules/formats configuration
-const modules = {
-  toolbar: false, // Disable toolbar for read-only mode
-  clipboard: {
-    matchVisual: false
-  }
-};
-
-const formats = [
-  'header',
-  'bold', 'italic', 'underline', 'strike',
-  'list', 'bullet',
-  'link', 'image',
-  'color', 'background'
-];
+import './BlogPost.css';
 
 const BlogPost = () => {
   const { slug } = useParams();
@@ -36,29 +18,28 @@ const BlogPost = () => {
     const fetchPost = async () => {
       setLoading(true);
       try {
-        // Get all posts
-        const response = await axios.get('/api/blogs');
+        const response = await axios.get('https://alqadridev.onrender.com/api/blogs');
         const allPosts = response.data;
         const currentPost = allPosts.find(p => p._id === slug || p.slug === slug);
         
-      if (currentPost) {
-          // Ensure post has a category
+        if (currentPost) {
           setPost({
             ...currentPost,
             category: currentPost.category || 'Web Development'
           });
-        // Get related posts based on category (excluding current post)
+
           const related = allPosts
             .filter(p => 
               p.category === currentPost.category && 
               p._id !== currentPost._id &&
               p.status === 'published'
             )
-          .slice(0, 3);
-        setRelatedPosts(related);
+            .slice(0, 3);
+          
+          setRelatedPosts(related);
           setError(null);
-      } else {
-        setError('Post not found');
+        } else {
+          setError('Post not found');
         }
       } catch (error) {
         console.error('Error fetching post:', error);
@@ -132,7 +113,7 @@ const BlogPost = () => {
         <div className="error-state">
           <p>{error}</p>
           <Link to="/blog" className="back-to-blog">
-            Back to Blog
+            <FaArrowLeft /> Back to Blog
           </Link>
         </div>
       </div>
@@ -150,6 +131,9 @@ const BlogPost = () => {
 
       <article className="blog-post">
         <div className="post-header">
+          <Link to="/blog" className="back-to-blog">
+            <FaArrowLeft /> Back to Blog
+          </Link>
           <h1>{post.title}</h1>
           
           <div className="post-meta">
@@ -178,32 +162,16 @@ const BlogPost = () => {
                 <FaShare /> Share
               </span>
               <div className="share-buttons">
-                <button 
-                  onClick={() => handleShare('twitter')}
-                  className="share-button twitter"
-                  aria-label="Share on Twitter"
-                >
+                <button onClick={() => handleShare('twitter')} className="share-button twitter">
                   <FaTwitter />
                 </button>
-                <button 
-                  onClick={() => handleShare('facebook')}
-                  className="share-button facebook"
-                  aria-label="Share on Facebook"
-                >
+                <button onClick={() => handleShare('facebook')} className="share-button facebook">
                   <FaFacebookF />
                 </button>
-                <button 
-                  onClick={() => handleShare('linkedin')}
-                  className="share-button linkedin"
-                  aria-label="Share on LinkedIn"
-                >
+                <button onClick={() => handleShare('linkedin')} className="share-button linkedin">
                   <FaLinkedinIn />
                 </button>
-                <button 
-                  onClick={() => handleShare('copy')}
-                  className="share-button copy"
-                  aria-label="Copy Link"
-                >
+                <button onClick={() => handleShare('copy')} className="share-button copy">
                   <FaLink />
                 </button>
               </div>
@@ -216,39 +184,31 @@ const BlogPost = () => {
         </div>
 
         <div className="post-content">
-          <ReactQuill
-            theme="snow"
-            value={post.content}
-            modules={modules}
-            formats={formats}
-            readOnly={true}
-            style={{ height: 'auto' }}
-          />
+          <div className="content-wrapper" dangerouslySetInnerHTML={{ __html: post.content }} />
         </div>
-      </article>
 
-      {relatedPosts.length > 0 && (
-        <div className="related-posts">
-          <h2>Related Posts</h2>
-          <div className="related-posts-grid">
-            {relatedPosts.map(relatedPost => (
-              <Link 
-                to={`/post/${relatedPost.slug}`} 
-                key={relatedPost._id}
-                className="related-post-card"
-              >
-                <img src={relatedPost.image} alt={relatedPost.title} />
-                <div className="related-post-content">
-                  <h3>{relatedPost.title}</h3>
-                  <p>{relatedPost.content.substring(0, 100)}...</p>
-                </div>
-              </Link>
-            ))}
+        {relatedPosts.length > 0 && (
+          <div className="related-posts">
+            <h2>Related Posts</h2>
+            <div className="related-posts-grid">
+              {relatedPosts.map((related) => (
+                <Link to={`/post/${related.slug}`} key={related._id} className="related-post-card">
+                  <img src={related.featuredImage || related.image} alt={related.title} />
+                  <div className="related-post-content">
+                    <h3>{related.title}</h3>
+                    <span className="related-post-date">
+                      <FaCalendar /> {formatDate(related.createdAt)}
+                    </span>
+                  </div>
+                </Link>
+              ))}
+            </div>
           </div>
-        </div>
-      )}
+        )}
+      </article>
     </div>
   );
 };
 
-export default BlogPost; 
+export default BlogPost;
+

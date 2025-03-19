@@ -10,6 +10,11 @@ import WorkExperience from "./pages/WorkExperience";
 import Contact from "./pages/Contact";
 
 import TeamMembers from "./pages/team";
+import Login from "./pages/Login";
+import AdminDashboard from "./pages/AdminDashboard";
+import Blog from "./pages/Blog";
+import BlogPost from "./pages/BlogPost";
+import ProtectedRoute from "./components/ProtectedRoute";
 
 import "./App.css";
 
@@ -28,7 +33,20 @@ function App() {
           <Route path="/contact" element={<Contact />} />
           <Route path="/team-member" element={<TeamMembers />} />
           
-   
+          {/* Blog Routes */}
+          <Route path="/blog" element={<Blog />} />
+          <Route path="/post/:slug" element={<BlogPost />} />
+          
+          {/* Auth Routes */}
+          <Route path="/login" element={<Login />} />
+          <Route 
+            path="/admin/*" 
+            element={
+              <ProtectedRoute>
+                <AdminDashboard />
+              </ProtectedRoute>
+            } 
+          />
         </Routes>
       </main>
       <Footer />

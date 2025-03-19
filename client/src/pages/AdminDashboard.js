@@ -111,7 +111,7 @@ const AdminDashboard = () => {
     setLoading(true);
     try {
       const token = localStorage.getItem('token');
-      const response = await axios.get('/api/blogs', {
+      const response = await axios.get('https://alqadridev.onrender.com/api/blogs', {
         headers: { Authorization: `Bearer ${token}` }
       });
       setBlogs(response.data);
@@ -198,14 +198,14 @@ const AdminDashboard = () => {
 
       if (editingBlog) {
         await axios.put(
-          `/api/blogs/${editingBlog._id}`,
+          `https://alqadridev.onrender.com/api/blogs/${editingBlog._id}`,
           blogData,
           { headers: { Authorization: `Bearer ${token}` } }
         );
         showSnackbar('Blog updated successfully');
       } else {
         await axios.post(
-          '/api/blogs',
+          'https://alqadridev.onrender.com/api/blogs',
           blogData,
           { headers: { Authorization: `Bearer ${token}` } }
         );
@@ -233,7 +233,7 @@ const AdminDashboard = () => {
         }
 
         // Make the delete request to your API
-        await axios.delete(`/api/blogs/${id}`, {
+        await axios.delete(`https://alqadridev.onrender.com/api/blogs/${id}`, {
           headers: { 
             Authorization: `Bearer ${token}`,
             'Content-Type': 'application/json'
