@@ -1,0 +1,20 @@
+{
+  "version": 2,
+  "builds": [
+    {
+      "src": "package.json",
+      "use": "@vercel/node"
+    }
+  ],
+  "routes": [
+    {
+      "src": "/(.*)",
+      "dest": "/"
+    }
+  ],
+  "env": {
+    "REACT_APP_API_URL": "https://alqadridev.onrender.com",
+    "REACT_APP_CLOUDINARY_CLOUD_NAME": "dzhypofiv",
+    "REACT_APP_CLOUDINARY_UPLOAD_PRESET": "ml_default"
+  }
+} 
