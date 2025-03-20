@@ -11,8 +11,8 @@ const app = express();
 // Middleware
 app.use(cors({
   origin: process.env.NODE_ENV === 'production' 
-    ? ['https://vercel.com/nomanqadri34-gmailcoms-projects/nomanqadri-portfolio-1x9l', 'http://localhost:3000']
-    : 'http://localhost:3000',
+    ? ['https://vercel.com/nomanqadri34-gmailcoms-projects/nomanqadri-portfolio-1x9l']
+    : 'https://vercel.com/nomanqadri34-gmailcoms-projects/nomanqadri-portfolio-1x9l',
   credentials: true
 }));
 app.use(express.json());
