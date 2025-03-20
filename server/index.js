@@ -8,16 +8,27 @@ const blogRoutes = require('./routes/blog');
 
 const app = express();
 
-// Middleware
+// ✅ Corrected CORS Configuration
+const allowedOrigins = [
+    'https://www.alqadridev.in', // Main frontend domain
+    'https://nomanqadri-portfolio-1x9l.vercel.app', // Vercel deployment
+    'http://localhost:3000' // For local development
+];
+
 app.use(cors({
-  origin: process.env.NODE_ENV === 'production' 
-    ? ['https://vercel.com/nomanqadri34-gmailcoms-projects/nomanqadri-portfolio-1x9l']
-    : 'https://vercel.com/nomanqadri34-gmailcoms-projects/nomanqadri-portfolio-1x9l',
-  credentials: true
+    origin: (origin, callback) => {
+        if (!origin || allowedOrigins.includes(origin)) {
+            callback(null, true);
+        } else {
+            callback(new Error('CORS not allowed for this origin'));
+        }
+    },
+    credentials: true
 }));
+
 app.use(express.json());
 
-// Welcome route
+// ✅ Welcome Route
 app.get('/', (req, res) => {
     res.send(`
         <html>
@@ -68,30 +79,34 @@ app.get('/', (req, res) => {
     `);
 });
 
-// Database connection
+// ✅ MongoDB Connection
 mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/blog-admin', {
     useNewUrlParser: true,
     useUnifiedTopology: true
-})
-.then(() => console.log('Connected to MongoDB'))
-.catch(err => console.error('MongoDB connection error:', err));
+}).then(() => {
+    console.log('✅ Connected to MongoDB');
+}).catch(err => {
+    console.error('❌ MongoDB connection error:', err);
+});
 
-// Routes
+// ✅ Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/blogs', blogRoutes);
 
-// Health check route
+// ✅ Health Check Route
 app.get('/health', (req, res) => {
-  res.status(200).json({ status: 'ok' });
+    res.status(200).json({ status: 'ok' });
 });
 
-// Error handling middleware
+// ✅ Improved Error Handling Middleware
 app.use((err, req, res, next) => {
-    console.error(err.stack);
+    console.error('❌ Error:', err.stack);
     res.status(500).json({ message: 'Something went wrong!' });
+    next(); // Ensure Express doesn't hang
 });
 
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
-    console.log(`Server is running on port ${PORT}`);
-}); 
+    console.log(`🚀 Server is running on port ${PORT}`);
+});
+
