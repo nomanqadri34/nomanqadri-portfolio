@@ -28,14 +28,25 @@ const Navbar = () => {
       <div className="container">
         {/* Logo */}
         <div className="logo">
-          <img src="lo1.png" alt="Logo" className="logo-img" />
+          <Link to="/">
+            <img 
+              src={`${process.env.PUBLIC_URL}/assets/lo1.png`} 
+              alt="Logo" 
+              className="logo-img"
+              onError={(e) => (e.target.src = "/fallback-logo.png")} // Fallback image
+            />
+          </Link>
         </div>
 
         {/* Desktop Menu */}
         <ul className={`nav-links ${menuOpen ? "open" : ""}`}>
-          {["Home", "About", "Services", "Work-Experience", "Contact", "Team-Member","blog"].map((item) => (
+          {["Home", "About", "Services", "Work-Experience", "Contact", "Team-Member", "Blog"].map((item) => (
             <li key={item}>
-              <Link to={`/${item.toLowerCase()}`} className="nav-item" onClick={() => setMenuOpen(false)}>
+              <Link 
+                to={`/${item.toLowerCase()}`} 
+                className="nav-item" 
+                onClick={() => setMenuOpen(false)}
+              >
                 {item}
               </Link>
             </li>
@@ -57,9 +68,13 @@ const Navbar = () => {
       {menuOpen && (
         <div className="mobile-menu">
           <ul className="mobile-nav">
-            {["Home", "About", "Services", "Work-Experience", "Contact", "Team-Member","blog"].map((item) => (
+            {["Home", "About", "Services", "Work-Experience", "Contact", "Team-Member", "Blog"].map((item) => (
               <li key={item}>
-                <Link to={`/${item.toLowerCase()}`} className="nav-item" onClick={() => setMenuOpen(false)}>
+                <Link 
+                  to={`/${item.toLowerCase()}`} 
+                  className="nav-item" 
+                  onClick={() => setMenuOpen(false)}
+                >
                   {item}
                 </Link>
               </li>
