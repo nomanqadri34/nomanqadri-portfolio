@@ -1,8 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Helmet } from 'react-helmet-async';
 import { Link } from 'react-router-dom';
-// eslint-disable-next-line
-import { FaCode, FaLaptopCode, FaMobileAlt, FaServer, FaDatabase, FaCloud, FaRobot, FaPaperPlane, FaTwitter, FaFacebookF, FaLinkedinIn, FaLink } from 'react-icons/fa';
+import { FaCode, FaLaptopCode, FaMobileAlt,  FaRobot, FaPaperPlane, FaTwitter, FaFacebookF, FaLinkedinIn, FaLink } from 'react-icons/fa';
 import { toast } from 'react-toastify';
 import emailjs from '@emailjs/browser';
 import 'react-toastify/dist/ReactToastify.css';
@@ -152,30 +151,84 @@ const Blog = () => {
   };
 
   const handleShare = async (platform, post) => {
+    if (!post) {
+      toast.error('No post selected for sharing');
+      return;
+    }
+    
     const baseUrl = window.location.origin;
-    const postUrl = `${baseUrl}/post/${post.slug}`;
+    
+    // Ensure we have a valid identifier (slug or _id) for the URL
+    const postIdentifier = post.slug || post._id;
+    if (!postIdentifier) {
+      toast.error('Could not generate a valid link for this post');
+      return;
+    }
+    
+    const postUrl = `${baseUrl}/post/${postIdentifier}`;
     const text = `Check out this article: ${post.title}`;
-
-    switch (platform) {
-      case 'twitter':
-        window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(postUrl)}`, '_blank');
-        break;
-      case 'facebook':
-        window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(postUrl)}`, '_blank');
-        break;
-      case 'linkedin':
-        window.open(`https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(postUrl)}`, '_blank');
-        break;
-      case 'copy':
-        try {
-          await navigator.clipboard.writeText(postUrl);
-          toast.success('Link copied to clipboard!');
-        } catch (err) {
-          toast.error('Failed to copy link');
-        }
-        break;
-      default:
-        break;
+  
+    try {
+      switch (platform) {
+        case 'twitter':
+          window.open(
+            `https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(postUrl)}`, 
+            '_blank'
+          );
+          break;
+        
+        case 'facebook':
+          window.open(
+            `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(postUrl)}`, 
+            '_blank'
+          );
+          break;
+        
+        case 'linkedin':
+          window.open(
+            `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(postUrl)}`, 
+            '_blank'
+          );
+          break;
+        
+        case 'copy':
+          try {
+            // Modern Clipboard API
+            await navigator.clipboard.writeText(postUrl);
+            toast.success('Link copied to clipboard!');
+          } catch (clipboardErr) {
+            console.warn('Modern clipboard API failed, falling back to legacy method', clipboardErr);
+            
+            // Fallback clipboard method
+            const tempInput = document.createElement('input');
+            tempInput.value = postUrl;
+            document.body.appendChild(tempInput);
+            tempInput.select();
+            tempInput.setSelectionRange(0, 99999); // For mobile devices
+            
+            try {
+              const successful = document.execCommand('copy');
+              if (successful) {
+                toast.success('Link copied to clipboard!');
+              } else {
+                toast.error('Failed to copy link');
+              }
+            } catch (execErr) {
+              console.error('Clipboard copy failed:', execErr);
+              toast.error('Unable to copy link');
+            } finally {
+              document.body.removeChild(tempInput);
+            }
+          }
+          break;
+        
+        default:
+          toast.error('Invalid sharing platform');
+          break;
+      }
+    } catch (error) {
+      console.error('Share error:', error);
+      toast.error('Failed to share post');
     }
   };
 
