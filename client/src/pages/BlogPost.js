@@ -18,16 +18,20 @@ const BlogPost = () => {
     const fetchPost = async () => {
       setLoading(true);
       try {
-        const response = await axios.get('https://alqadridev.onrender.com/api/blogs');
-        const allPosts = response.data;
-        const currentPost = allPosts.find(p => p._id === slug || p.slug === slug);
+        // First, try to fetch the specific post directly using the ID/slug
+        const postResponse = await axios.get(`https://alqadridev.onrender.com/api/blogs/${slug}`);
         
-        if (currentPost) {
+        if (postResponse.data) {
+          const currentPost = postResponse.data;
           setPost({
             ...currentPost,
             category: currentPost.category || 'Web Development'
           });
-
+          
+          // Then fetch related posts
+          const allPostsResponse = await axios.get('https://alqadridev.onrender.com/api/blogs');
+          const allPosts = allPostsResponse.data;
+          
           const related = allPosts
             .filter(p => 
               p.category === currentPost.category && 
@@ -41,18 +45,59 @@ const BlogPost = () => {
         } else {
           setError('Post not found');
         }
-      } catch (error) {
-        console.error('Error fetching post:', error);
-        setError('Failed to load the blog post. Please try again later.');
+      } catch (postError) {
+        console.error('Error fetching specific post:', postError);
+        
+        // Fallback: Try to find the post in all posts
+        try {
+          const allPostsResponse = await axios.get('https://alqadridev.onrender.com/api/blogs');
+          const allPosts = allPostsResponse.data;
+          const currentPost = allPosts.find(p => p._id === slug || p.slug === slug);
+          
+          if (currentPost) {
+            setPost({
+              ...currentPost,
+              category: currentPost.category || 'Web Development'
+            });
+
+            const related = allPosts
+              .filter(p => 
+                p.category === currentPost.category && 
+                p._id !== currentPost._id &&
+                p.status === 'published'
+              )
+              .slice(0, 3);
+            
+            setRelatedPosts(related);
+            setError(null);
+          } else {
+            setError('Post not found');
+          }
+        } catch (error) {
+          console.error('Error fetching post:', error);
+          if (error.response) {
+            setError(`Server error: ${error.response.status}`);
+          } else if (error.request) {
+            setError('No response from server. Please check your connection.');
+          } else {
+            setError(`Error: ${error.message}`);
+          }
+        }
       } finally {
         setLoading(false);
       }
     };
 
-    fetchPost();
+    if (slug) {
+      fetchPost();
+    } else {
+      setError('Invalid post identifier');
+      setLoading(false);
+    }
   }, [slug]);
 
   const formatDate = (dateString) => {
+    if (!dateString) return 'Unknown date';
     return new Date(dateString).toLocaleDateString('en-US', {
       year: 'numeric',
       month: 'long',
@@ -61,6 +106,7 @@ const BlogPost = () => {
   };
 
   const calculateReadTime = (content) => {
+    if (!content) return 1;
     const wordsPerMinute = 200;
     const words = content.split(/\s+/).length;
     return Math.ceil(words / wordsPerMinute);
@@ -70,7 +116,15 @@ const BlogPost = () => {
     if (!post) return;
     
     const baseUrl = window.location.origin;
-    const postUrl = `${baseUrl}/post/${post.slug}`;
+    
+    // Make sure we have a valid identifier (slug or _id) for the URL
+    const postIdentifier = post.slug || post._id;
+    if (!postIdentifier) {
+      toast.error('Could not generate a valid link for this post');
+      return;
+    }
+    
+    const postUrl = `${baseUrl}/post/${postIdentifier}`;
     const text = `Check out this article: ${post.title}`;
 
     switch (platform) {
@@ -85,10 +139,32 @@ const BlogPost = () => {
         break;
       case 'copy':
         try {
+          // Modern clipboard API
           await navigator.clipboard.writeText(postUrl);
           toast.success('Link copied to clipboard!');
+          console.log('Copied URL:', postUrl); // For debugging
         } catch (err) {
-          toast.error('Failed to copy link');
+          console.error('Clipboard API error:', err);
+          
+          // Fallback clipboard method
+          try {
+            const textArea = document.createElement('textarea');
+            textArea.value = postUrl;
+            document.body.appendChild(textArea);
+            textArea.focus();
+            textArea.select();
+            const successful = document.execCommand('copy');
+            document.body.removeChild(textArea);
+            
+            if (successful) {
+              toast.success('Link copied to clipboard!');
+            } else {
+              toast.error('Failed to copy link');
+            }
+          } catch (fallbackErr) {
+            console.error('Fallback clipboard error:', fallbackErr);
+            toast.error('Failed to copy link');
+          }
         }
         break;
       default:
@@ -126,7 +202,7 @@ const BlogPost = () => {
     <div className="blog-post-container">
       <Helmet>
         <title>{post.title} | Blog</title>
-        <meta name="description" content={post.content.substring(0, 155)} />
+        <meta name="description" content={post.content?.substring(0, 155) || post.title} />
       </Helmet>
 
       <article className="blog-post">
@@ -180,11 +256,18 @@ const BlogPost = () => {
         </div>
 
         <div className="post-featured-image">
-          <img src={post.featuredImage || post.image} alt={post.title} />
+          <img 
+            src={post.featuredImage || post.image || 'https://via.placeholder.com/800x400'} 
+            alt={post.title} 
+            onError={(e) => {
+              e.target.onerror = null;
+              e.target.src = 'https://via.placeholder.com/800x400?text=Image+Not+Available';
+            }}
+          />
         </div>
 
         <div className="post-content">
-          <div className="content-wrapper" dangerouslySetInnerHTML={{ __html: post.content }} />
+          <div className="content-wrapper" dangerouslySetInnerHTML={{ __html: post.content || '<p>No content available</p>' }} />
         </div>
 
         {relatedPosts.length > 0 && (
@@ -192,8 +275,15 @@ const BlogPost = () => {
             <h2>Related Posts</h2>
             <div className="related-posts-grid">
               {relatedPosts.map((related) => (
-                <Link to={`/post/${related.slug}`} key={related._id} className="related-post-card">
-                  <img src={related.featuredImage || related.image} alt={related.title} />
+                <Link to={`/post/${related.slug || related._id}`} key={related._id} className="related-post-card">
+                  <img 
+                    src={related.featuredImage || related.image || 'https://via.placeholder.com/300x200'} 
+                    alt={related.title}
+                    onError={(e) => {
+                      e.target.onerror = null;
+                      e.target.src = 'https://via.placeholder.com/300x200?text=Image+Not+Available';
+                    }}
+                  />
                   <div className="related-post-content">
                     <h3>{related.title}</h3>
                     <span className="related-post-date">
@@ -211,4 +301,3 @@ const BlogPost = () => {
 };
 
 export default BlogPost;
-
